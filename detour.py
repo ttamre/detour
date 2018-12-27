@@ -2,7 +2,7 @@
 
 """
 File:           detour.py
-Descrtiption:   Python application that displays real-time traffic distruptions
+Descrtiption:   Python application that displays real-time traffic disruptions
                 using the city of Edmonton open data portal
 
 Author:     Tem Tamre
