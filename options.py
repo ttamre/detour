@@ -14,7 +14,8 @@ import datetime
 import haversine
 import detour
 
-def get_disruptions(client, pref):
+
+def get_disruptions(client, prefs):
     '''
     Information needed for query
     1) Starting and finishing date (compare to current date)
@@ -24,34 +25,67 @@ def get_disruptions(client, pref):
             WHERE starting_date <= current_date <= finishing_date 
             AND   haversine(current_location, location) <= max_distance
 
-    SoQL:   ?$where tarting_date <= current_date <= finishing_date
+    Current implementation: Large query, then filter data
+    Target implementation: Specific query, little to no filtering
     '''
-    current_date = datetime.datetime.now().isoformat()
-    current_location = pref.get_coordinates()
-    max_distance = pref.get_distance()
 
-    url = detour.SODA_URL + "/resource/" + detour.RESOURCE + ".json?$query="
-    statement = "SELECT * WHERE starting_date <= {current_date} <= finishing_date".format(current_date=current_date)
-    query = url + statement
+    # Get rows
+    result_set = client.get(detour.IDENTIFIER,
+                            select="starting_date, finish_date, status, description")
 
-    result_set = client.get(detour.RESOURCE, query=query)
-    print(result_set)
+    # Filter out the disruptions that aren't currently active
+    active_results = list(filter(between_date, result_set))
+
+    # Filter out the disruptions that are outside of the maximum distance
+    relative_results = list(filter(within_distance, [active_results, prefs]))
+
+    # Display our findings
+    [print(r, end="\n\n") for r in relative_results]
+    print("{} of {}".format(type(relative_results), type(relative_results[0])))
+    input("Enter any key to continue")
 
 
-def set_preferences(pref, option):
+def set_preferences(prefs, option):
     if option == "distance":
-        print("SET DISTANCE\n", pref)
-        pref.set_distance(input("Enter a max distance: "))
+        print("SET DISTANCE\n", prefs)
+        prefs.set_distance(input("Enter a max distance: "))
 
     elif option == "manual_location":
-        print("SET MANUAL\n", pref)
-        pref.set_manual_location(input("Enter 'true' for manual distance, 'false' for automatic distance: "))
+        print("SET MANUAL\n", prefs)
+        prefs.set_manual_location(input("Enter 'true' for manual distance, 'false' for automatic distance: "))
 
     elif option == "coordinates":
-        print("SET COORDINATES\n", pref)
-        if pref.get_manual_location():
+        print("SET COORDINATES\n", prefs)
+        if prefs.get_manual_location():
             new_lat = float(input("Enter latitude: "))
             new_lon = float(input("Enter longitude: "))
-            pref.set_location(new_lat, new_lon)
+            prefs.set_location(new_lat, new_lon)
         else:
-            pref.set_location()
+            prefs.set_location()
+
+
+def report_issue():
+    print("To report an issue, post with all related artifacts (error codes, steps to replicate, machine specs) at\n\thttps://github.com/ttamre/detour/issues\n")
+    print("To contact the developer, send an email to the following address with 'Detour Project' in the subject line\n\tttamre@ualberta.ca\n")
+    input("Enter any key to continue")
+
+
+def between_date(results):
+    start_date = results["starting_date"]
+    finish_date = results["finish_date"]
+    current_date = datetime.datetime.now().isoformat()
+    return start_date <= current_date <= finish_date
+
+
+def within_distance(args):
+    results, prefs = args
+
+    disruption_coordinates = results["location"]
+    target = set(disruption_coordinates)
+
+    current_location = prefs.get_coordinates()
+    curr = current_location.to_set()
+
+    distance = haversine.haversine(target, curr)
+    max_distance = prefs.get_distance()
+    return distance <= max_distance

@@ -94,5 +94,8 @@ class Coordinate():
         else:
             raise CoordinateError
 
+    def to_set(self):
+        return {self.lat, self.lon}
+
     def __str__(self):
         return "{},{}".format(self.lat, self.lon)
