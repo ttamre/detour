@@ -57,9 +57,9 @@ class UserPreferences():
             self.coordinates.set_lon(new_lon)
         else:
             # Get user's approximate GPS coordinates
-            self.update_location()
+            self._update_location()
 
-    def update_location(self):
+    def _update_location(self):
         req = requests.get(LOCATION)
         text = req.text
         coords = text.rstrip().split(",")

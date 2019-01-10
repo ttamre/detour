@@ -17,6 +17,13 @@ import detour
 
 def get_disruptions(client, prefs):
     '''
+    Fetch the disruptions near the user from the database
+
+    Parameters: client (sodapy.Socrata() object) - database client
+                prefs (UserPreferences() object) - user preferences
+
+    ---
+
     Information needed for query
     1) Starting and finishing date (compare to current date)
     2) Location (compare to current_location +- max_distance)
@@ -46,6 +53,13 @@ def get_disruptions(client, prefs):
 
 
 def set_preferences(prefs, option):
+    '''
+    Function that allows the user to change the <option> option of the <prefs> user preference object
+
+    Parameters: prefs (UserPreferences() object) - user preferences
+                option (String) - preference item to change
+    '''
+
     if option == "distance":
         print("SET DISTANCE\n", prefs)
         prefs.set_distance(input("Enter a max distance: "))
@@ -65,19 +79,38 @@ def set_preferences(prefs, option):
 
 
 def report_issue():
+    '''
+    Displays information that the user could use to report issues with this program
+    '''
+
     print("To report an issue, post with all related artifacts (error codes, steps to replicate, machine specs) at\n\thttps://github.com/ttamre/detour/issues\n")
     print("To contact the developer, send an email to the following address with 'Detour Project' in the subject line\n\tttamre@ualberta.ca\n")
     input("Enter any key to continue")
 
 
 def between_date(results):
-    start_date = results["starting_date"]
-    finish_date = results["finish_date"]
+    '''
+    Helper function that returns true if the current date is in between a result's starting and finish date, false otherwise
+
+    Parameter: results (Dictionary) - result of a query
+    Return: true or false
+    '''
+
+    start_date   = results["starting_date"]
+    finish_date  = results["finish_date"]
     current_date = datetime.datetime.now().isoformat()
     return start_date <= current_date <= finish_date
 
 
 def within_distance(args):
+    '''
+    Helper function that returns true if the disruption's location is within <prefs.get_distance()> km away of the user
+
+    Parameter: args (list) - results, prefs
+                - results (Dictionary) - results of a query
+                - prefs (UserPreferences() object) - user preferences
+    Return: true or false
+    '''
     results, prefs = args
 
     disruption_coordinates = results["location"]

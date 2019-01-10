@@ -5,6 +5,8 @@ File:           detour.py
 Descrtiption:   Python application that displays real-time traffic disruptions
                 using the city of Edmonton open data portal
 
+Data portal: https://data.edmonton.ca/Transportation/Traffic-Disruptions-Map-View/87ck-293k
+
 Author:     Tem Tamre
 Contact:    ttamre@ualberta.ca
 Version:    1.0
@@ -31,6 +33,10 @@ PREFERENCES = preferences.UserPreferences()
 
 
 def main():
+    '''
+    Create database client and menu, then wait for user input and execute the associated functions
+    '''
+
     # Create our client and address
     client = sodapy.Socrata(SODA_URL, API_KEY)
 
@@ -48,6 +54,7 @@ def main():
 
     report_issue = FunctionItem("Report an issue or contact the developer", options.report_issue)
 
+    # Entering the number displayed by each menu option will execute the function linked to that menu item
     main_menu.append_item(get_disruptions)
     main_menu.append_item(set_preferences)
     main_menu.append_item(report_issue)
